@@ -1,5 +1,10 @@
 from flask import Flask, render_template, request
 import requests
+import smtplib
+from config import APP_KEY, MY_EMAIL
+
+my_email = MY_EMAIL
+password = APP_KEY
 
 app = Flask(__name__)
 
@@ -19,7 +24,20 @@ def about():
 @app.route('/contact', methods=['POST', 'GET'])
 def contact():
     if request.method == "POST":
-        print("In post request")
+        name, email, phn_num, msg = request.form['name'], request.form['email'], request.form['phone'], request.form['message']
+        formatted_email = f"""
+            Name: {name}
+            Email: {email}
+            Phone Number: {phn_num}
+            Message: {msg}
+            """
+        with smtplib.SMTP("smtp.gmail.com") as connection:
+            connection.starttls()
+            connection.login(user=my_email, password=password)
+            connection.sendmail(from_addr=my_email,
+                                to_addrs=my_email,
+                                msg=f"Subject: New message \n\n {formatted_email}"
+                                )
         return "<h1>Form Successfully submitted</h1>"
     elif request.method == "GET":
         return render_template("contact.html")
